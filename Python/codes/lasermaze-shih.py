@@ -1,12 +1,17 @@
 #python code for laser tag
-#First addressing sample problem, then will address problems that do not hit a wall
+#Python version: 3.5.0
+#incorporating problems that do not hit a wall and changing input file through command line
 
 #reading in input file
-import os;
-path="/Users/stephshih/Documents/lasermaze-shih/"
-os.chdir(path)
-in_file=open("input files/inputfile copy.txt", "r")
-
+import os, sys, getopt
+##path="/Users/stephshih/Documents/lasermaze-shih/"
+##os.chdir(path)
+##in_file=open("input files/inputfile greaterloop.txt", "r")
+##out_file=open("Python/output files/inputfile greaterloop.txt", "w")
+files=getopt.getopt(sys.argv[1:],'')
+in_file=open(files[1][0], 'r')
+out_file=open(str(files[1][1]),'w')
+    
 maze_size=in_file.readline().strip("\n").split(" ")
 maze_size=[int(i) for i in maze_size]
 starting_point=in_file.readline().strip("\n").split(" ")
@@ -34,12 +39,12 @@ def mirrors_same_axis(coord_value, interested_axis):
 def mirrors_north(x_value, y_value,counter):
     potential_y_values=list(mirror_y_coord[i] for i in mirrors_same_axis(x_value, mirror_x_coord)) #make sure mirrors are on the same x axis
     mirror_type=list(mirror_direction[i] for i in mirrors_same_axis(x_value, mirror_x_coord))
-    for yi in range(y_value+1,maze_size[1]):#if going north, want to check greater y values
+    for yi in range(y_value+1,maze_size[1]+1):#if going north, want to check greater y values
         if yi in potential_y_values:
             new_y_value=yi
             adding_counts=abs(y_value-yi)
             mirror_type=mirror_type[potential_y_values.index(yi)]
-            return(x_value, new_y_value,mirror_type,counter+adding_counts, "N")
+            return(x_value, new_y_value,mirror_type,"N",counter+adding_counts)
 
 def mirrors_south(x_value, y_value,counter):
     potential_y_values=list(mirror_y_coord[i] for i in mirrors_same_axis(x_value, mirror_x_coord))
@@ -49,18 +54,18 @@ def mirrors_south(x_value, y_value,counter):
             new_y_value=yi
             adding_counts=abs(y_value-yi)
             mirror_type=mirror_type[potential_y_values.index(yi)]
-            return(x_value, new_y_value,mirror_type,counter+adding_counts, "S")
+            return(x_value, new_y_value,mirror_type,"S",counter+adding_counts)
         
 
 def mirrors_east(x_value, y_value,counter):
     potential_x_values=list(mirror_x_coord[i] for i in mirrors_same_axis(y_value, mirror_y_coord))
     mirror_type=list(mirror_direction[i] for i in mirrors_same_axis(y_value, mirror_y_coord))
-    for xi in range(x_value+1,maze_size[0]):
+    for xi in range(x_value+1,maze_size[0]+1):
         if xi in potential_x_values:
             new_x_value=xi
             adding_counts=abs(x_value-xi)
             mirror_type=mirror_type[potential_x_values.index(xi)]
-            return(new_x_value, y_value,mirror_type,counter+adding_counts,"E")
+            return(new_x_value, y_value,mirror_type,"E",counter+adding_counts)
     
 def mirrors_west(x_value, y_value,counter):
     potential_x_values=list(mirror_x_coord[i] for i in mirrors_same_axis(y_value, mirror_y_coord))
@@ -70,25 +75,25 @@ def mirrors_west(x_value, y_value,counter):
             new_x_value=xi
             adding_counts=abs(x_value-xi)
             mirror_type=mirror_type[potential_x_values.index(xi)]
-            return(new_x_value, y_value,mirror_type,counter+adding_counts, "W")
+            return(new_x_value, y_value,mirror_type, "W",counter+adding_counts)
 
 #create function to determine directionality
-def directionfunct(x_value, y_value,mirror_type, counter, direction):
+def directionfunct(x_value, y_value,mirror_type,  direction,counter):
     if (direction=="S" and mirror_type=="R") or (direction=="N" and mirror_type=="L"):
-        new_coords=mirrors_west(x_value,y_value,counter)
+        coords=mirrors_west(x_value,y_value,counter)
     elif (direction=="N" and mirror_type=="R") or (direction=="S" and mirror_type=="L"):
-        new_coords=mirrors_east(x_value,y_value,counter)
+        coords=mirrors_east(x_value,y_value,counter)
     elif (direction=="E" and mirror_type=="R") or (direction=="W" and mirror_type=="L"):
-        new_coords=mirrors_north(x_value,y_value,counter)
+        coords=mirrors_north(x_value,y_value,counter)
     elif (direction=="W" and mirror_type=="R") or (direction=="E" and mirror_type=="L"):
-        new_coords=mirrors_south(x_value,y_value,counter)
-    return(new_coords)       
+        coords=mirrors_south(x_value,y_value,counter)
+    return(coords)       
 
                
         
 ##initialize maze to find very first mirror
 counter=0
-direction=starting_point[2]
+direction=starting_point[2].upper()
 x_value=int(starting_point[0])
 y_value=int(starting_point[1])
 if (direction=="W"):
@@ -100,45 +105,74 @@ elif (direction=="N"):
 elif (direction=="S"):
     new_coords=mirrors_south(x_value,y_value,counter)
 
-x_value=new_coords[0]
-y_value=new_coords[1]
-mirror_type=new_coords[2]
-counter=new_coords[3]
-direction=new_coords[4]
+if new_coords is not None:
+    x_value=new_coords[0]
+    y_value=new_coords[1]
+    mirror_type=new_coords[2]
+    direction=new_coords[3]
+    counter=new_coords[4]
+    end=0
+else:
+    end=3
+    if direction=="W":
+        counter=x_value
+        final_coords=[0,y_value]
+    elif direction=="E":
+        counter=maze_size[0]-x_value-1
+        final_coords=[maze_size[0]-1,y_value]
+    elif direction=="N":
+        counter=maze_size[1]-y_value-1
+        final_coords=[x_value,maze_size[1]-1]
+    elif direction=="S":
+        counter=y_value
+        final_coords=[x_value,0]
+    out_file.write(str(counter)+"\n")
+    for i in final_coords:
+        out_file.write(str(i)+" ")
+    out_file.close()
+
 
 ##while statement to continue
-end=0
+
 process_record=[]
+countingnumber=0
 while end==0:
-    new_coords=directionfunct(x_value, y_value, mirror_type, counter,direction)
-    if new_coords is not None:
-        process_record.append(new_coords)
-        x_value=new_coords[0]
-        y_value=new_coords[1]
-        mirror_type=new_coords[2]
-        counter=new_coords[3]
-        direction=new_coords[4]
+    new_coords=directionfunct(x_value, y_value, mirror_type,direction, counter)
+    if len(process_record)==len(set(process_record)) and new_coords is not None:
+            process_record.append(new_coords[:4])
+            x_value=new_coords[0]
+            y_value=new_coords[1]
+            mirror_type=new_coords[2]
+            direction=new_coords[3]
+            counter=new_coords[4]
     else:
-        end=1
+        if len(process_record)>len(set(process_record)):
+            end=2
+            out_file.write("-1\n")
+            out_file.close()
+        else:
+            end=1
+        
 
 #compute final endpoint, this should be the very last entry
-if (direction=="S" and mirror_type=="R") or (direction=="N" and mirror_type=="L"):
-    counter+=x_value
-    final_coords=[0,y_value]
-elif (direction=="N" and mirror_type=="R") or (direction=="S" and mirror_type=="L"):
-    counter+=maze_size[0]-x_value-1
-    final_coords=[0,y_value]
-elif (direction=="E" and mirror_type=="R") or (direction=="W" and mirror_type=="L"):
-    counter+=maze_size[1]-y_value
-    final_coords=[x_value,0]
-elif (direction=="W" and mirror_type=="R") or (direction=="E" and mirror_type=="L"):
-    counter+=y_value
-    final_coords=[x_value,0]
+if end==1:
+    if (direction=="S" and mirror_type=="R") or (direction=="N" and mirror_type=="L"):
+        counter+=x_value
+        final_coords=[0,y_value]
+    elif (direction=="N" and mirror_type=="R") or (direction=="S" and mirror_type=="L"):
+        counter+=maze_size[0]-x_value-1
+        final_coords=[maze_size[0]-1,y_value]
+    elif (direction=="E" and mirror_type=="R") or (direction=="W" and mirror_type=="L"):
+        counter+=maze_size[1]-y_value
+        final_coords=[x_value,maze_size[1]-1]
+    elif (direction=="W" and mirror_type=="R") or (direction=="E" and mirror_type=="L"):
+        counter+=y_value
+        final_coords=[x_value,0]
+    if final_coords is not None:
+        out_file.write(str(counter)+"\n")
+        for i in final_coords:
+            out_file.write(str(i)+" ")
+        out_file.close()
 
 
-out_file=open("output files/inputfile copy.txt", "w")
-out_file.write(str(counter)+"\n")
-for i in final_coords:
-    out_file.write(str(i)+" ")
-out_file.close()
         
