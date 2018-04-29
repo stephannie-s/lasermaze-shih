@@ -2,16 +2,16 @@ Code for solving the laser maze problem
 
 NOTE: Please use Python version 3.5.x or 3.6.x as you may get different results using version 2.7
 
-To run the Python code through command line:
+To run the Python code (lasermaze-shih.py) through command line:
 Python3 Python/codes/lasermaze-shih.py ./path/to/input/file ./path/to/output/file
 
-To run the R code through command line:
-Rscript R/codes/lasermaze-shih.py ./path/to/input/file ./path/to/output/file
+To run the R code (lasermaze-shih.R) through command line:
+Rscript R/codes/lasermaze-shih.R ./path/to/input/file ./path/to/output/file
 
 Folders:
 1) Input files: Includes all the tested input files. See below for more information.
-2) Python: Includes a folder with codes and a separate folder with output files corresponding to each input file name
-3) R: Includes a folder with codes and a separate folder with output files corresponding to each input file name
+2) Python: Includes a folder with codes and a separate folder with output files corresponding to each input file 
+3) R: Includes a folder with codes and a separate folder with output files corresponding to each input file 
 
 Input files:
 These are various input files tested using the Python and R codes. 
