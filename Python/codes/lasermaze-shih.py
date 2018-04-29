@@ -1,17 +1,12 @@
 #python code for laser tag
-#Python version: 3.5.0
-#incorporating problems that do not hit a wall and changing input file through command line
+#Python version: 3.5.0 or 3.6.5
 
 #reading in input file
 import os, sys, getopt
-##path="/Users/stephshih/Documents/lasermaze-shih/"
-##os.chdir(path)
-##in_file=open("input files/inputfile greaterloop.txt", "r")
-##out_file=open("Python/output files/inputfile greaterloop.txt", "w")
 files=getopt.getopt(sys.argv[1:],'')
 in_file=open(files[1][0], 'r')
 out_file=open(str(files[1][1]),'w')
-    
+
 maze_size=in_file.readline().strip("\n").split(" ")
 maze_size=[int(i) for i in maze_size]
 starting_point=in_file.readline().strip("\n").split(" ")
@@ -36,74 +31,76 @@ def mirrors_same_axis(coord_value, interested_axis):
     return(keeping_values)
 
 #create function to check for the first mirrors in relation to current position
-def mirrors_north(x_value, y_value,counter):
-    potential_y_values=list(mirror_y_coord[i] for i in mirrors_same_axis(x_value, mirror_x_coord)) #make sure mirrors are on the same x axis
-    mirror_type=list(mirror_direction[i] for i in mirrors_same_axis(x_value, mirror_x_coord))
-    for yi in range(y_value+1,maze_size[1]+1):#if going north, want to check greater y values
-        if yi in potential_y_values:
-            new_y_value=yi
-            adding_counts=abs(y_value-yi)
-            mirror_type=mirror_type[potential_y_values.index(yi)]
-            return(x_value, new_y_value,mirror_type,"N",counter+adding_counts)
-
-def mirrors_south(x_value, y_value,counter):
-    potential_y_values=list(mirror_y_coord[i] for i in mirrors_same_axis(x_value, mirror_x_coord))
-    mirror_type=list(mirror_direction[i] for i in mirrors_same_axis(x_value, mirror_x_coord))
-    for yi in range(y_value-1,-1,-1):#if going south, want to check decreasing y values
-        if yi in potential_y_values:
-            new_y_value=yi
-            adding_counts=abs(y_value-yi)
-            mirror_type=mirror_type[potential_y_values.index(yi)]
-            return(x_value, new_y_value,mirror_type,"S",counter+adding_counts)
+def mirrors_north_south(x_value, y_value,counter,north):
+    potential_y_values=[]
+    potential_mirror_type=[]
+    for i in mirrors_same_axis(x_value, mirror_x_coord):
+        potential_y_values.append(mirror_y_coord[i])#make sure mirrors are on the same x axis
+        potential_mirror_type.append(mirror_direction[i])
+    if north==1:
+        for yi in range(y_value+1,maze_size[1]+1):#if going north, want to check greater y values
+            if yi in potential_y_values:
+                new_y_value=yi
+                adding_counts=abs(y_value-yi)
+                mirror_type=potential_mirror_type[potential_y_values.index(yi)]
+                return(x_value, new_y_value,mirror_type,"N",counter+adding_counts)
+    else:
+        for yi in range(y_value-1,-1,-1):#if going south, want to check decreasing y values
+            if yi in potential_y_values:
+                new_y_value=yi
+                adding_counts=abs(y_value-yi)
+                mirror_type=potential_mirror_type[potential_y_values.index(yi)]
+                return(x_value, new_y_value,mirror_type,"S",counter+adding_counts)
         
 
-def mirrors_east(x_value, y_value,counter):
-    potential_x_values=list(mirror_x_coord[i] for i in mirrors_same_axis(y_value, mirror_y_coord))
-    mirror_type=list(mirror_direction[i] for i in mirrors_same_axis(y_value, mirror_y_coord))
-    for xi in range(x_value+1,maze_size[0]+1):
-        if xi in potential_x_values:
-            new_x_value=xi
-            adding_counts=abs(x_value-xi)
-            mirror_type=mirror_type[potential_x_values.index(xi)]
-            return(new_x_value, y_value,mirror_type,"E",counter+adding_counts)
-    
-def mirrors_west(x_value, y_value,counter):
-    potential_x_values=list(mirror_x_coord[i] for i in mirrors_same_axis(y_value, mirror_y_coord))
-    mirror_type=list(mirror_direction[i] for i in mirrors_same_axis(y_value, mirror_y_coord))
-    for xi in range(x_value-1,-1,-1):
-         if xi in potential_x_values:
-            new_x_value=xi
-            adding_counts=abs(x_value-xi)
-            mirror_type=mirror_type[potential_x_values.index(xi)]
-            return(new_x_value, y_value,mirror_type, "W",counter+adding_counts)
+def mirrors_east_west(x_value, y_value,counter,east):
+    potential_x_values=[]
+    potential_mirror_type=[]
+    for i in mirrors_same_axis(y_value, mirror_y_coord):
+        potential_x_values.append(mirror_x_coord[i])
+        potential_mirror_type.append(mirror_direction[i])
+    if east==1:
+        for xi in range(x_value+1,maze_size[0]+1):
+            if xi in potential_x_values:
+                new_x_value=xi
+                adding_counts=abs(x_value-xi)
+                mirror_type=potential_mirror_type[potential_x_values.index(xi)]
+                return(new_x_value, y_value,mirror_type,"E",counter+adding_counts)
+    else:
+        for xi in range(x_value-1,-1,-1):
+             if xi in potential_x_values:
+                new_x_value=xi
+                adding_counts=abs(x_value-xi)
+                mirror_type=potential_mirror_type[potential_x_values.index(xi)]
+                return(new_x_value, y_value,mirror_type, "W",counter+adding_counts)
 
 #create function to determine directionality
 def directionfunct(x_value, y_value,mirror_type,  direction,counter):
     if (direction=="S" and mirror_type=="R") or (direction=="N" and mirror_type=="L"):
-        coords=mirrors_west(x_value,y_value,counter)
+        coords=mirrors_east_west(x_value,y_value,counter, east=0)
     elif (direction=="N" and mirror_type=="R") or (direction=="S" and mirror_type=="L"):
-        coords=mirrors_east(x_value,y_value,counter)
+        coords=mirrors_east_west(x_value,y_value,counter, east=1)
     elif (direction=="E" and mirror_type=="R") or (direction=="W" and mirror_type=="L"):
-        coords=mirrors_north(x_value,y_value,counter)
+        coords=mirrors_north_south(x_value,y_value,counter, north=1)
     elif (direction=="W" and mirror_type=="R") or (direction=="E" and mirror_type=="L"):
-        coords=mirrors_south(x_value,y_value,counter)
+        coords=mirrors_north_south(x_value,y_value,counter, north=0)
     return(coords)       
 
                
         
-##initialize maze to find very first mirror
+#initialize maze to find very first mirror
 counter=0
 direction=starting_point[2].upper()
 x_value=int(starting_point[0])
 y_value=int(starting_point[1])
 if (direction=="W"):
-    new_coords=mirrors_west(x_value,y_value,counter)
+    new_coords=mirrors_east_west(x_value,y_value,counter,east=0)
 elif (direction=="E"):
-    new_coords=mirrors_east(x_value,y_value,counter)
+    new_coords=mirrors_east_west(x_value,y_value,counter, east=1)
 elif (direction=="N"):
-    new_coords=mirrors_north(x_value,y_value,counter)
+    new_coords=mirrors_north_south(x_value,y_value,counter,north=1)
 elif (direction=="S"):
-    new_coords=mirrors_south(x_value,y_value,counter)
+    new_coords=mirrors_north_south(x_value,y_value,counter, north=0)
 
 if new_coords is not None:
     x_value=new_coords[0]
@@ -132,10 +129,8 @@ else:
     out_file.close()
 
 
-##while statement to continue
-
+#while statement to continue
 process_record=[]
-countingnumber=0
 while end==0:
     new_coords=directionfunct(x_value, y_value, mirror_type,direction, counter)
     if len(process_record)==len(set(process_record)) and new_coords is not None:
@@ -153,7 +148,6 @@ while end==0:
         else:
             end=1
         
-
 #compute final endpoint, this should be the very last entry
 if end==1:
     if (direction=="S" and mirror_type=="R") or (direction=="N" and mirror_type=="L"):
@@ -163,7 +157,7 @@ if end==1:
         counter+=maze_size[0]-x_value-1
         final_coords=[maze_size[0]-1,y_value]
     elif (direction=="E" and mirror_type=="R") or (direction=="W" and mirror_type=="L"):
-        counter+=maze_size[1]-y_value
+        counter+=maze_size[1]-y_value-1
         final_coords=[x_value,maze_size[1]-1]
     elif (direction=="W" and mirror_type=="R") or (direction=="E" and mirror_type=="L"):
         counter+=y_value
