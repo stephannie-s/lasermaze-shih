@@ -8,12 +8,9 @@ if (length(enteredfiles)==0) {
   name.in.file=enteredfiles[1] 
   outfile=enteredfiles[2] 
 }
-
-#in.file = read.delim("input files/inputfile greaterloop.txt", header=F, sep=" ")
 in.file=read.delim(name.in.file, header=F, sep=" ")
 in.file[,3] = gsub(pattern='\\/', replacement='R', x=in.file[,3])
 in.file[,3] = gsub(pattern='\\\\', replacement='L', x=in.file[,3])
-#outfile="R/output files/inputfile greaterloop.txt"
 
 #creating function for closest mirrors in relation to current position----
 mirrors_north_south=function(x_value, y_value, counter,north){
@@ -49,7 +46,7 @@ mirrors_east_west=function(x_value, y_value, counter,east){
   }
   else{
     new_x_value=potential_x_values[potential_x_values[,1]<x_value,]
-    counter=counter+abs(tail(new_x_value)[,1]-x_value)
+    counter=counter+abs(tail(new_x_value,n=1)[,1]-x_value)
     if (dim(new_x_value)[1]>0){
       return(cbind(tail(new_x_value, n=1),'W', counter))
     }
@@ -121,7 +118,7 @@ while (end==0){
     coords=tail(process_record, n=1)
     end=1
     }
-  else if (dim(process_record)[1]==dim(unique(process_record))[1]){
+  else if (dim(process_record)[1]==dim(unique(process_record[-5]))[1]){
     names(coords)[-5]=names(process_record)
     process_record=rbind(process_record, coords[-5])
     counter=coords[5]
@@ -134,8 +131,8 @@ while (end==0){
 
 #compute final endpoint----
 if (end==1){
-  finalx=as.integer(unlist(coords[c(1)]))
-  finaly=as.integer(unlist(coords[c(2)]))
+  finalx=coords[1]
+  finaly=coords[2]
   direction=coords[4]
   mirror_type=coords[3]
   if ((direction=="S" & mirror_type=="R")|(direction=='N' & mirror_type=='L')){
@@ -145,13 +142,13 @@ if (end==1){
     counter=counter+x_max-finalx-1
     final_coords=cbind(x_max-1,finaly)
   } else if ((direction=="E" & mirror_type=="R")|(direction=='W' & mirror_type=='L')){
-    counter=counter+y_max-finaly
+    counter=counter+y_max-finaly-1
     final_coords=cbind(finalx,y_max-1)
   } else if ((direction=="W" & mirror_type=="R")|(direction=='E' & mirror_type=='L')){
     counter=counter+finaly
     final_coords=cbind(finalx,0)
   }
-  
+
   cat(unlist(counter), file=outfile, sep="\n")
   cat(unlist(final_coords), file=outfile,append=T, sep=" ")
 }
